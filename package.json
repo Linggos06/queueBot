@@ -4,7 +4,7 @@
   "description": "A queue bot",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js",
+    "start": "nodemon index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
@@ -12,6 +12,8 @@
   "type": "module",
   "dependencies": {
     "dotenv": "^16.0.3",
-    "puppeteer": "^19.9.0"
+    "nodemon": "^2.0.22",
+    "puppeteer": "^19.9.0",
+    "tesseract.js": "^4.0.3"
   }
 }

@@ -1,7 +1,7 @@
 import * as dotenv from 'dotenv';
 dotenv.config();
 import puppeteer from 'puppeteer';
-
+import { createWorker } from 'tesseract.js';
 
 (async () => {
   const browser = await puppeteer.launch({headless: false});
@@ -13,7 +13,7 @@ import puppeteer from 'puppeteer';
   // Set screen size
   await page.setViewport({width: 1080, height: 1024});
 
-  // Type into search box
+  // Type into input boxes
   await page.type('#ctl00_MainContent_txtFam', process.env.SURNAME);
   await page.type('#ctl00_MainContent_txtIm', process.env.NAME);
   await page.type('#ctl00_MainContent_txtOt', process.env.SECOND_NAME);
@@ -22,36 +22,34 @@ import puppeteer from 'puppeteer';
 
   await page.evaluate(() => {
     let day = document.querySelector('#ctl00_MainContent_DDL_Day');
-    day.value = "21";
-  });
-
-  await page.evaluate(() => {
     let month = document.querySelector('#ctl00_MainContent_DDL_Month');
+    let title = document.querySelector('#ctl00_MainContent_DDL_Mr');
+    day.value = "21";
     month.value = "11";
+    title.value = "MS";
   });
 
   await page.type('#ctl00_MainContent_TextBox_Year', process.env.YEAR);
 
-  await page.evaluate(() => {
-    let title = document.querySelector('#ctl00_MainContent_DDL_Mr');
-    title.value = "MS";
-  });
+  const image = await page.waitForSelector('div > img#ctl00_MainContent_imgSecNum');
+  const imageSrc = await image.evaluate(el => el.src);
+  
+  console.log(imageSrc);
+ 
+  (async () => {
+    const worker = await createWorker();
+    await worker.loadLanguage('eng');
+    await worker.initialize('eng');
+    await worker.setParameters({
+      tessedit_char_whitelist: '0123456789',
+    });
+    const { data: { text } } = await worker.recognize(imageSrc);
+    console.log(text); 
+    await worker.terminate(); 
+
+  })();
 
   // await page.type('#ctl00_MainContent_txtCode', '5555');
-
-  // // Wait and click on first result
-  // const searchResultSelector = '.search-box__link';
-  // await page.waitForSelector(searchResultSelector);
-  // await page.click(searchResultSelector);
-
-  // // Locate the full title with a unique string
-  // const textSelector = await page.waitForSelector(
-  //   'text/Customize and automate'
-  // );
-  // const fullTitle = await textSelector.evaluate(el => el.textContent);
-
-  // // Print the full title
-  // console.log('The title of this blog post is "%s".', fullTitle);
 
   // await browser.close();
 })();
